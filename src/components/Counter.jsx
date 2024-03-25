@@ -1,49 +1,48 @@
 import React, { Component } from 'react';
 
 class Counter extends Component {
+  intervalId = null; // Для хранения ID интервала
+
   constructor(props) {
     super(props);
     this.state = {
       count: 0,
-      clicks: [], // Сохраняем временные метки каждого клика
+      clicks: [],
+      cps: 0, // Добавляем cps в состояние
     };
   }
 
   IncrementCount = () => {
     const now = Date.now();
-    const newClicks = [...this.state.clicks, now] // Добавляем текущее время в массив
-      .filter(click => now - click < 5000); // Оставляем клики только за последние 5 секунд
+    const newClicks = [...this.state.clicks, now]
+      .filter(click => now - click < 5000);
     this.setState({
       count: this.state.count + 1,
       clicks: newClicks,
     });
   }
 
-  getCPS = () => {
+  calculateCPS = () => {
     const now = Date.now();
     const recentClicks = this.state.clicks.filter(click => now - click < 5000);
-    return recentClicks.length / 5; // Делим количество кликов на 5, так как у нас интервал в 5 секунд
+    this.setState({
+      cps: recentClicks.length / 5,
+    });
   }
 
   componentDidMount() {
-    console.log("Первое монтирование");
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.count !== prevState.count) {
-      console.log("Состояние count обновилось");
-    }
+    this.intervalId = setInterval(this.calculateCPS, 10); // Обновляем CPS каждые 10 мс
   }
 
   componentWillUnmount() {
-    console.log("Компонент удаляется...");
+    clearInterval(this.intervalId); // Очищаем интервал при размонтировании компонента
   }
 
   render() {
     return (
       <div className='counter'>
         <h1 onClick={this.IncrementCount}>{this.state.count}</h1>
-        <h2>CPS: {this.getCPS().toFixed(2)}</h2> {/* Вызываем getCPS для расчета текущего значения */}
+        <h2>CPS: {this.state.cps.toFixed(2)}</h2> {/* Отображаем значение CPS из состояния */}
       </div>
     );
   }
